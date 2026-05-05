@@ -1,0 +1,19 @@
+apiVersion: 1
+
+contactPoints:
+  - orgId: 1
+    name: SMS via Twilio
+    receivers:
+      - uid: sms-via-twilio-webhook
+        type: webhook
+        settings:
+          url: http://sms-notifier:8090/grafana-alert
+          httpMethod: POST
+        disableResolveMessage: false
+
+policies:
+  - orgId: 1
+    receiver: SMS via Twilio
+    group_by:
+      - grafana_folder
+      - alertname

@@ -55,6 +55,20 @@ services:
       loki:
         condition: service_started
 
+  sms-notifier:
+    build:
+      context: .
+      dockerfile: Dockerfile.sms-notifier
+    environment:
+      PORT: "8090"
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-}
+      TWILIO_FROM: ${TWILIO_FROM:-}
+      SMS_TO: ${SMS_TO:-}
+      SMS_DRY_RUN: ${SMS_DRY_RUN:-true}
+    ports:
+      - "8090:8090"
+
   grafana:
     image: grafana/grafana:11.2.0
     environment:
@@ -65,6 +79,7 @@ services:
     volumes:
       - ./observability/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
       - ./observability/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./observability/grafana/provisioning/alerting:/etc/grafana/provisioning/alerting:ro
       - ./observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
     ports:
       - "3000:3000"
@@ -74,6 +89,8 @@ services:
       prometheus:
         condition: service_started
       loki:
+        condition: service_started
+      sms-notifier:
         condition: service_started
 
 volumes:

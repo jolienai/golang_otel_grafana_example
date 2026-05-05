@@ -15,7 +15,37 @@ Services:
 - Tempo: http://localhost:3200
 - Prometheus: http://localhost:9090
 - Loki: http://localhost:3100
+- SMS notifier: http://localhost:8090
 - Dashboard: http://localhost:3000/d/go-api-tempo-traces/go-api-tempo-traces
+
+## SMS Alerts
+
+Grafana sends firing alerts to the `sms-notifier` service, and `sms-notifier` sends the SMS through Twilio.
+
+Create a local `.env` file from the example:
+
+```bash
+cp .env.example .env
+```
+
+Set these values in `.env`:
+
+```bash
+TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+TWILIO_AUTH_TOKEN=your_twilio_auth_token
+TWILIO_FROM=+15551234567
+SMS_TO=+15557654321
+SMS_DRY_RUN=false
+```
+
+Use a Twilio phone number for `TWILIO_FROM`. Use the destination phone number for `SMS_TO`.
+Without a `.env` file, Docker Compose runs the notifier in dry-run mode.
+
+For a local test without sending a real SMS, set:
+
+```bash
+SMS_DRY_RUN=true
+```
 
 ## Generate Data
 
@@ -74,6 +104,31 @@ Useful examples:
 {compose_service="api"} |= "simulated server error"
 {compose_service="api"} |= "request completed"
 ```
+
+## Alerts
+
+Grafana automatically provisions an alert rule from `observability/grafana/provisioning/alerting/api-alerts.yaml`.
+Grafana also provisions an `SMS via Twilio` contact point from `observability/grafana/provisioning/alerting/contact-points.yaml`.
+
+Provisioned alert:
+
+- `API 5xx errors above 5 per minute`
+
+It evaluates every `10s` and fires when this Prometheus query is above `5`:
+
+```promql
+sum(increase(api_http_requests_total{status=~"5.."}[1m]))
+```
+
+Test it by generating more than five simulated 5xx responses:
+
+```bash
+for i in 1 2 3 4 5 6; do
+  curl -s -o /dev/null -w "%{http_code}\n" "http://localhost:8080/error"
+done
+```
+
+Open Grafana at http://localhost:3000 and go to **Alerting > Alert rules** to see the rule state.
 
 ## Dashboard
 
