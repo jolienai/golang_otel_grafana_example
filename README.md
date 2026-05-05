@@ -15,12 +15,15 @@ Services:
 - Tempo: http://localhost:3200
 - Prometheus: http://localhost:9090
 - Loki: http://localhost:3100
-- SMS notifier: http://localhost:8090
+- Alert notifier: http://localhost:8090
 - Dashboard: http://localhost:3000/d/go-api-tempo-traces/go-api-tempo-traces
 
-## SMS Alerts
+## Alert Notifications
 
-Grafana sends firing alerts to the `sms-notifier` service, and `sms-notifier` sends the SMS through Twilio.
+Grafana sends firing alerts to the `sms-notifier` service. The notifier can fan out to:
+
+- Twilio SMS
+- PagerDuty Events API v2
 
 Create a local `.env` file from the example:
 
@@ -36,15 +39,20 @@ TWILIO_AUTH_TOKEN=your_twilio_auth_token
 TWILIO_FROM=+15551234567
 SMS_TO=+15557654321
 SMS_DRY_RUN=false
+PAGERDUTY_INTEGRATION_KEY=your_pagerduty_events_api_v2_integration_key
+PAGERDUTY_DRY_RUN=false
 ```
 
 Use a Twilio phone number for `TWILIO_FROM`. Use the destination phone number for `SMS_TO`.
-Without a `.env` file, Docker Compose runs the notifier in dry-run mode.
+Use a PagerDuty **Events API v2** integration key for `PAGERDUTY_INTEGRATION_KEY`.
 
-For a local test without sending a real SMS, set:
+Without a `.env` file, Docker Compose runs SMS and PagerDuty in dry-run mode.
+
+For a local test without sending a real SMS or PagerDuty event, set:
 
 ```bash
 SMS_DRY_RUN=true
+PAGERDUTY_DRY_RUN=true
 ```
 
 ## Generate Data
@@ -108,7 +116,7 @@ Useful examples:
 ## Alerts
 
 Grafana automatically provisions an alert rule from `observability/grafana/provisioning/alerting/api-alerts.yaml`.
-Grafana also provisions an `SMS via Twilio` contact point from `observability/grafana/provisioning/alerting/contact-points.yaml`.
+Grafana also provisions an `Alert webhook` contact point from `observability/grafana/provisioning/alerting/contact-points.yaml`. That webhook calls the local notifier, which can send Twilio SMS and PagerDuty events.
 
 Provisioned alert:
 

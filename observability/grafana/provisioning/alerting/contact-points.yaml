@@ -1,10 +1,14 @@
 apiVersion: 1
 
+deleteContactPoints:
+  - orgId: 1
+    uid: sms-via-twilio-webhook
+
 contactPoints:
   - orgId: 1
-    name: SMS via Twilio
+    name: Alert webhook
     receivers:
-      - uid: sms-via-twilio-webhook
+      - uid: alert-webhook
         type: webhook
         settings:
           url: http://sms-notifier:8090/grafana-alert
@@ -13,7 +17,7 @@ contactPoints:
 
 policies:
   - orgId: 1
-    receiver: SMS via Twilio
+    receiver: Alert webhook
     group_by:
       - grafana_folder
       - alertname
